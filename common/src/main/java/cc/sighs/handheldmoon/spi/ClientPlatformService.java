@@ -18,6 +18,8 @@ public interface ClientPlatformService {
 
     int deviceConfigKeyCode();
 
+    int coneSwitchKeyCode();
+
     boolean isFlashlightKeyDown();
 
     void sendLampState(BlockPos pos, float xRot, float yRot, boolean powered);

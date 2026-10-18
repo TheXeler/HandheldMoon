@@ -27,6 +27,9 @@ public final class Config {
     public static final boolean DEFAULT_CONE_RAYCAST = false;
 
     public static final Value<Boolean> ENABLE_FIXED_FLASHLIGHT = value("enableFixedFlashlight", false);
+    /** Master switch for every visible light cone; toggled by the cone key binding. */
+    public static final Value<Boolean> VISIBLE_CONE = value("enableVisibleCone", true);
+    /** Gates the cones rendered for other players only; see {@link #VISIBLE_CONE}. */
     public static final Value<Boolean> PLAYER_RAY = value("enablePlayerRay", true);
     public static final Value<Boolean> REAL_LIGHT = value("enableRealLight", DEFAULT_REAL_LIGHT);
     public static final Value<Double> LIGHT_INTENSITY = value("lightIntensity", DEFAULT_LIGHT_INTENSITY);
@@ -49,9 +52,18 @@ public final class Config {
      * to opaque white when the list is empty. Used to tint real light sources.
      */
     public static int lightColorArgb() {
-        var colors = LampDeviceConfig.fromGlobalConfig().lightColorsARGB();
-        if (!colors.isEmpty()) {
+        return lightColorArgb(LampDeviceConfig.fromGlobalConfig());
+    }
+
+    /**
+     * Returns the ARGB light color of the given device config's first entry,
+     * falling back to the global config when {@code config} is {@code null}.
+     */
+    public static int lightColorArgb(LampDeviceConfig config) {
+        if (config == null) {
+            config = LampDeviceConfig.fromGlobalConfig();
         }
+        java.util.List<String> colors = config.lightColorsARGB();
         if (colors == null || colors.isEmpty()) {
             return 0xFFFFFFFF;
         }
@@ -81,6 +93,7 @@ public final class Config {
             return;
         }
         ENABLE_FIXED_FLASHLIGHT.set(parseBoolean(props, ENABLE_FIXED_FLASHLIGHT.key, ENABLE_FIXED_FLASHLIGHT.get()));
+        VISIBLE_CONE.set(parseBoolean(props, VISIBLE_CONE.key, VISIBLE_CONE.get()));
         PLAYER_RAY.set(parseBoolean(props, PLAYER_RAY.key, PLAYER_RAY.get()));
         REAL_LIGHT.set(parseBoolean(props, REAL_LIGHT.key, REAL_LIGHT.get()));
         LIGHT_INTENSITY.set(parseDouble(props, LIGHT_INTENSITY.key, LIGHT_INTENSITY.get()));
@@ -112,6 +125,7 @@ public final class Config {
         }
         Properties props = new Properties();
         props.setProperty(ENABLE_FIXED_FLASHLIGHT.key, Boolean.toString(ENABLE_FIXED_FLASHLIGHT.get()));
+        props.setProperty(VISIBLE_CONE.key, Boolean.toString(VISIBLE_CONE.get()));
         props.setProperty(PLAYER_RAY.key, Boolean.toString(PLAYER_RAY.get()));
         props.setProperty(REAL_LIGHT.key, Boolean.toString(REAL_LIGHT.get()));
         props.setProperty(LIGHT_INTENSITY.key, Double.toString(LIGHT_INTENSITY.get()));

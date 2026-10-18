@@ -11,6 +11,8 @@ public final class ModKeyBindings {
             "key.handheldmoon.lamp_switch.desc", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, CATEGORY);
     public static final KeyMapping OPEN_DEVICE_CONFIG = new KeyMapping(
             "key.handheldmoon.device_config.desc", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, CATEGORY);
+    public static final KeyMapping CONE_SWITCH = new KeyMapping(
+            "key.handheldmoon.cone_switch.desc", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, CATEGORY);
 
     private ModKeyBindings() {
     }

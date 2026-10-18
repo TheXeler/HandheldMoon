@@ -68,7 +68,7 @@ public final class RayEvent {
             PoseStack poseStack, Vec3 cameraPos,
             Matrix4fc modelViewMatrix, float partialTick
     ) {
-        if (!Config.PLAYER_RAY.get()) return;
+        if (!Config.VISIBLE_CONE.get()) return;
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) return;
@@ -77,19 +77,24 @@ public final class RayEvent {
         IRayConeConfig globalConfig = buildGlobalConeConfig();
 
         // ---- player cones ----
-        for (Player player : mc.level.players()) {
-            if (player.getUUID().equals(mc.player.getUUID())) continue;
-            if (!Utils.isUsingFlashlight(player)) continue;
+        // Only other players' beams are drawn; the local player is skipped below.
+        // enablePlayerRay gates this loop alone, while enableVisibleCone gates
+        // every cone (see the early return above and PlacedLampConeSources).
+        if (Config.PLAYER_RAY.get()) {
+            for (Player player : mc.level.players()) {
+                if (player.getUUID().equals(mc.player.getUUID())) continue;
+                if (!Utils.isUsingFlashlight(player)) continue;
 
-            Vec3 eyePos = player.getEyePosition(partialTick);
-            Vec3 rawDir = player.getViewVector(partialTick).normalize();
-            Vec3 prevDir = LAST_DIR.getOrDefault(player.getUUID(), rawDir);
-            Vec3 smoothedDir = prevDir.scale(0.7).add(rawDir.scale(0.3)).normalize();
-            LAST_DIR.put(player.getUUID(), smoothedDir);
+                Vec3 eyePos = player.getEyePosition(partialTick);
+                Vec3 rawDir = player.getViewVector(partialTick).normalize();
+                Vec3 prevDir = LAST_DIR.getOrDefault(player.getUUID(), rawDir);
+                Vec3 smoothedDir = prevDir.scale(0.7).add(rawDir.scale(0.3)).normalize();
+                LAST_DIR.put(player.getUUID(), smoothedDir);
 
-            sources.add(new RayConeRenderer.ConeSource(
-                    eyePos, smoothedDir, globalConfig
-            ));
+                sources.add(new RayConeRenderer.ConeSource(
+                        eyePos, smoothedDir, globalConfig
+                ));
+            }
         }
 
         LampConeSourceHooks.append(mc, sources);

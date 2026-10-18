@@ -192,6 +192,24 @@ public final class DynamicLightManager {
         return query(blockX, blockY, blockZ).color;
     }
 
+    /**
+     * Cheap guard for neighbour scans: whether any dynamic source is registered
+     * for the section that contains the given block. Cells in source-free
+     * sections can never sit on a beam rim.
+     */
+    public static boolean hasSourcesNear(BlockPos pos) {
+        return hasSourcesNear(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    public static boolean hasSourcesNear(int blockX, int blockY, int blockZ) {
+        SectionIndex index = sectionIndex;
+        return index.sources.get(sectionKey(
+                SectionPos.blockToSectionCoord(blockX),
+                SectionPos.blockToSectionCoord(blockY),
+                SectionPos.blockToSectionCoord(blockZ)
+        )) != null;
+    }
+
     private static LightQuery query(int blockX, int blockY, int blockZ) {
         SectionIndex index = sectionIndex;
         long sectionKey = sectionKey(

@@ -18,15 +18,17 @@ import net.minecraft.world.entity.player.Player;
 public class PlayerFlashlightLineLightBehavior implements DynamicLightBehavior {
     private final Player player;
     private RayLightBehavior delegate;
+    private int color;
     private static final double INNER = 0.5;
     private static final double OUTER = 0.7;
 
     public PlayerFlashlightLineLightBehavior(Player player) {
         this.player = player;
-        this.delegate = createDelegate();
+        this.color = heldColorArgb(player);
+        this.delegate = createDelegate(color);
     }
 
-    private RayLightBehavior createDelegate() {
+    private RayLightBehavior createDelegate(int lightColor) {
         return new RayLightBehavior(
                 DynamicLightBuilder.cone()
                         .range(DynamicLightDefaults.FLASHLIGHT_RANGE)
@@ -37,8 +39,17 @@ public class PlayerFlashlightLineLightBehavior implements DynamicLightBehavior {
                         () -> player.getEyePosition(1.0f),
                         () -> LineLightMath.computeDirection(player.getYRot(), player.getXRot(), false),
                         () -> Utils.isUsingFlashlight(player),
-                        cc.sighs.handheldmoon.registry.Config.lightColorArgb()
+                        lightColor
                 );
+    }
+
+    /**
+     * Light colour of the held lamp's own device config, so per-item colours
+     * tint the beam; players lit through a compat controller keep the global
+     * config colour.
+     */
+    private static int heldColorArgb(Player player) {
+        return cc.sighs.handheldmoon.registry.Config.lightColorArgb(Utils.heldLampConfig(player));
     }
 
     @Override
@@ -58,6 +69,14 @@ public class PlayerFlashlightLineLightBehavior implements DynamicLightBehavior {
 
     @Override
     public boolean hasChanged() {
+        // The colour lives in the held item's data component, which the ray
+        // light config does not observe; rebuild the delegate when it changes.
+        int current = heldColorArgb(player);
+        if (current != color) {
+            color = current;
+            delegate = createDelegate(color);
+            return true;
+        }
         return delegate.hasChanged();
     }
 

@@ -30,6 +30,13 @@ public final class OperationEventHandler {
             DeviceConfigOpenHelper.openForCursorTarget();
             return;
         }
+        if (key == keys.coneSwitchKeyCode() && action == InputConstants.PRESS) {
+            Config.VISIBLE_CONE.set(!Config.VISIBLE_CONE.get());
+            Config.VISIBLE_CONE.save();
+            player.sendSystemMessage(Component.translatable(
+                    "message.handheldmoon.visible_cone", Config.VISIBLE_CONE.get().toString()));
+            return;
+        }
         if (key == keys.flashlightKeyCode()) {
             if (action == InputConstants.PRESS) {
                 cacheGama = Config.LIGHT_INTENSITY.get();

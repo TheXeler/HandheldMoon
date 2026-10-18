@@ -1,4 +1,4 @@
-﻿{
+{
   "itemGroup.tab.handheldmoon": "Handheld Moon",
   "block.handheldmoon.moonlight_lamp": "Moonlight Lamp",
   "block.handheldmoon.full_moon": "Full Moon",
@@ -8,9 +8,11 @@
   "key.categories.handheldmoon": "Handheld Moon",
   "key.handheldmoon.lamp_switch.desc": "Lamp Switch",
   "key.handheldmoon.device_config.desc": "Device Config",
+  "key.handheldmoon.cone_switch.desc": "Cone Toggle",
   "message.handheldmoon.light_tweak": "Gamma: %s",
   "message.handheldmoon.real_light": "Real light: %s",
   "message.handheldmoon.player_ray": "Player ray: %s",
+  "message.handheldmoon.visible_cone": "Visible cone: %s",
   "handheldmoon.attachment.handheldmoon.name": "Moonlight Lamp",
   "screen.handheldmoon.device_config.title": "Device Configuration",
   "screen.handheldmoon.device_config.moonlight_lamp": "Moonlight Lamp",

@@ -142,10 +142,11 @@ public final class NeoForgePlatformService implements PlatformService {
             cc.sighs.handheldmoon.neoforge.event.handler.ShaderEventHandler.onClientTick();
         }
 
-        void register(IEventBus eventBus) { eventBus.addListener((RegisterKeyMappingsEvent event) -> { event.register(ModKeyBindings.FLASHLIGHT_SWITCH); event.register(ModKeyBindings.OPEN_DEVICE_CONFIG); }); }
+        void register(IEventBus eventBus) { eventBus.addListener((RegisterKeyMappingsEvent event) -> { event.register(ModKeyBindings.FLASHLIGHT_SWITCH); event.register(ModKeyBindings.OPEN_DEVICE_CONFIG); event.register(ModKeyBindings.CONE_SWITCH); }); }
         @Override public void registerKeyBindings() { }
         @Override public int flashlightKeyCode() { return ModKeyBindings.FLASHLIGHT_SWITCH.getDefaultKey().getValue(); }
         @Override public int deviceConfigKeyCode() { return ModKeyBindings.OPEN_DEVICE_CONFIG.getDefaultKey().getValue(); }
+        @Override public int coneSwitchKeyCode() { return ModKeyBindings.CONE_SWITCH.getDefaultKey().getValue(); }
         @Override public boolean isFlashlightKeyDown() { return ModKeyBindings.FLASHLIGHT_SWITCH.isDown(); }
         @Override public void openLampConfig(cc.sighs.handheldmoon.api.config.ConfigTarget<LampDeviceConfig> target) {
             net.minecraft.client.Minecraft.getInstance().setScreen(new cc.sighs.handheldmoon.neoforge.client.screen.MoonlightLampDeviceConfigScreen(target));

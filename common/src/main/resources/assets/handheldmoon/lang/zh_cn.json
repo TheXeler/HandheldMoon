@@ -1,4 +1,4 @@
-﻿{
+{
   "itemGroup.tab.handheldmoon": "掌中明月",
   "block.handheldmoon.moonlight_lamp": "月光灯",
   "block.handheldmoon.full_moon": "盈月",
@@ -8,9 +8,11 @@
   "key.categories.handheldmoon": "掌中明月",
   "key.handheldmoon.lamp_switch.desc": "手电开关",
   "key.handheldmoon.device_config.desc": "设备配置",
+  "key.handheldmoon.cone_switch.desc": "光锥开关",
   "message.handheldmoon.light_tweak": "亮度: %s",
   "message.handheldmoon.real_light": "真实光照: %s",
   "message.handheldmoon.player_ray": "玩家光束: %s",
+  "message.handheldmoon.visible_cone": "光锥: %s",
   "handheldmoon.attachment.handheldmoon.name": "月光灯",
   "screen.handheldmoon.device_config.title": "设备配置",
   "screen.handheldmoon.device_config.moonlight_lamp": "月光灯",
