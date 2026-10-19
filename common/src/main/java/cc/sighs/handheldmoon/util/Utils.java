@@ -50,6 +50,12 @@ public final class Utils {
         return main != null ? main : stackLampConfig(player.getOffhandItem());
     }
 
+    /** Returns the held lamp config, or the global default when no lamp is held. */
+    public static LampDeviceConfig heldLampConfigOrDefault(Player player) {
+        LampDeviceConfig config = heldLampConfig(player);
+        return config != null ? config : LampDeviceConfig.fromGlobalConfig();
+    }
+
     private static @Nullable LampDeviceConfig stackLampConfig(ItemStack stack) {
         if (!stack.is(ModItems.MOONLIGHT_LAMP.get())) {
             return null;

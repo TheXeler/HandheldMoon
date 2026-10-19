@@ -19,32 +19,20 @@ public final class Config {
     private static final Logger LOGGER = LoggerFactory.getLogger(Config.class);
     private static final String CONFIG_FILE_NAME = "handheldmoon.properties";
 
-    /** Default for {@link #REAL_LIGHT}; mirrors {@code LampDeviceConfig.builtInDefaults().realLight()}. */
-    public static final boolean DEFAULT_REAL_LIGHT = true;
-    /** Default for {@link #LIGHT_INTENSITY}; mirrors {@code LampDeviceConfig.builtInDefaults().lightIntensity()}. */
-    public static final double DEFAULT_LIGHT_INTENSITY = 0.3;
-    /** Default for {@link #CONE_RAYCAST}; mirrors {@code LampDeviceConfig.builtInDefaults().coneRaycast()}. */
+    /** Default for {@link #CONE_RAYCAST}. */
     public static final boolean DEFAULT_CONE_RAYCAST = false;
 
     public static final Value<Boolean> ENABLE_FIXED_FLASHLIGHT = value("enableFixedFlashlight", false);
-    /** Master switch for every visible light cone; toggled by the cone key binding. */
-    public static final Value<Boolean> VISIBLE_CONE = value("enableVisibleCone", true);
-    /** Gates the cones rendered for other players only; see {@link #VISIBLE_CONE}. */
+    /** Gates the cones rendered for other players only; see {@code LampDeviceConfig.enableVisibleCone()}. */
     public static final Value<Boolean> PLAYER_RAY = value("enablePlayerRay", true);
-    public static final Value<Boolean> REAL_LIGHT = value("enableRealLight", DEFAULT_REAL_LIGHT);
-    public static final Value<Double> LIGHT_INTENSITY = value("lightIntensity", DEFAULT_LIGHT_INTENSITY);
     public static final Value<Boolean> CONE_RAYCAST = value("enableConeRaycast", DEFAULT_CONE_RAYCAST);
 
     private Config() {
     }
 
     public static void register() {
-        LampDeviceConfig.setGlobalConfigSupplier(() -> LampDeviceConfig.builtInDefaults()
-                .withRealLight(REAL_LIGHT.get())
-                .withLightIntensity(LIGHT_INTENSITY.get())
-                .withConeRaycast(CONE_RAYCAST.get()));
-        FullMoonDeviceConfig.setGlobalConfigSupplier(() ->
-                FullMoonDeviceConfig.builtInDefaults().withRealLight(REAL_LIGHT.get()));
+        LampDeviceConfig.setGlobalConfigSupplier(LampDeviceConfig::builtInDefaults);
+        FullMoonDeviceConfig.setGlobalConfigSupplier(FullMoonDeviceConfig::builtInDefaults);
     }
 
     /**
@@ -75,6 +63,24 @@ public final class Config {
         return (a & 0xFF) << 24 | (r & 0xFF) << 16 | (g & 0xFF) << 8 | (b & 0xFF);
     }
 
+    /**
+     * Returns the real-light color of the flashlight. The renderer treats the
+     * color's alpha channel as the maximum tint amount, so an installed lens
+     * supplies its RGB and maps {@code lensTintStrength} onto alpha. Without a
+     * lens the configured base color is returned unchanged.
+     */
+    public static int flashlightColorArgb(LampDeviceConfig config) {
+        int base = lightColorArgb(config);
+        if (config == null || !config.hasLens()) {
+            return base;
+        }
+        int alpha = (int) Math.round(255.0 * config.lensTintStrength());
+        if (alpha <= 0) {
+            return base;
+        }
+        return (alpha & 0xFF) << 24 | (config.lensColor() & 0xFFFFFF);
+    }
+
     /** Loads persisted values, creating a default config file on first run. */
     public static void load() {
         Path file = configFile();
@@ -93,28 +99,19 @@ public final class Config {
             return;
         }
         ENABLE_FIXED_FLASHLIGHT.set(parseBoolean(props, ENABLE_FIXED_FLASHLIGHT.key, ENABLE_FIXED_FLASHLIGHT.get()));
-        VISIBLE_CONE.set(parseBoolean(props, VISIBLE_CONE.key, VISIBLE_CONE.get()));
         PLAYER_RAY.set(parseBoolean(props, PLAYER_RAY.key, PLAYER_RAY.get()));
-        REAL_LIGHT.set(parseBoolean(props, REAL_LIGHT.key, REAL_LIGHT.get()));
-        LIGHT_INTENSITY.set(parseDouble(props, LIGHT_INTENSITY.key, LIGHT_INTENSITY.get()));
         CONE_RAYCAST.set(parseBoolean(props, CONE_RAYCAST.key, CONE_RAYCAST.get()));
+        // Drop keys that moved to per-device or per-item configuration.
+        if (props.containsKey("enableRealLight")
+                || props.containsKey("lightIntensity")
+                || props.containsKey("enableVisibleCone")) {
+            save();
+        }
     }
 
     private static boolean parseBoolean(Properties props, String key, boolean fallback) {
         String value = props.getProperty(key);
         return value == null ? fallback : Boolean.parseBoolean(value.trim());
-    }
-
-    private static double parseDouble(Properties props, String key, double fallback) {
-        String value = props.getProperty(key);
-        if (value == null) {
-            return fallback;
-        }
-        try {
-            return Double.parseDouble(value.trim());
-        } catch (NumberFormatException e) {
-            return fallback;
-        }
     }
 
     /** Writes all values to the loader configuration directory. */
@@ -125,10 +122,7 @@ public final class Config {
         }
         Properties props = new Properties();
         props.setProperty(ENABLE_FIXED_FLASHLIGHT.key, Boolean.toString(ENABLE_FIXED_FLASHLIGHT.get()));
-        props.setProperty(VISIBLE_CONE.key, Boolean.toString(VISIBLE_CONE.get()));
         props.setProperty(PLAYER_RAY.key, Boolean.toString(PLAYER_RAY.get()));
-        props.setProperty(REAL_LIGHT.key, Boolean.toString(REAL_LIGHT.get()));
-        props.setProperty(LIGHT_INTENSITY.key, Double.toString(LIGHT_INTENSITY.get()));
         props.setProperty(CONE_RAYCAST.key, Boolean.toString(CONE_RAYCAST.get()));
         try {
             Path dir = file.getParent();

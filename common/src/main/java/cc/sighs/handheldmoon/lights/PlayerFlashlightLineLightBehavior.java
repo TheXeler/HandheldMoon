@@ -2,6 +2,7 @@ package cc.sighs.handheldmoon.lights;
 
 import cc.sighs.handheldmoon.api.light.DynamicLightBuilder;
 import cc.sighs.handheldmoon.api.light.impl.RayLightBehavior;
+import cc.sighs.handheldmoon.config.LampDeviceConfig;
 import cc.sighs.handheldmoon.dynamiclight.DynamicLightDefaults;
 import cc.sighs.handheldmoon.dynamiclight.DynamicLightBehavior;
 import cc.sighs.handheldmoon.util.LineLightMath;
@@ -18,38 +19,36 @@ import net.minecraft.world.entity.player.Player;
 public class PlayerFlashlightLineLightBehavior implements DynamicLightBehavior {
     private final Player player;
     private RayLightBehavior delegate;
-    private int color;
+    private LampDeviceConfig config;
     private static final double INNER = 0.5;
     private static final double OUTER = 0.7;
 
     public PlayerFlashlightLineLightBehavior(Player player) {
         this.player = player;
-        this.color = heldColorArgb(player);
-        this.delegate = createDelegate(color);
+        this.config = currentConfig(player);
+        this.delegate = createDelegate(config);
     }
 
-    private RayLightBehavior createDelegate(int lightColor) {
+    private static LampDeviceConfig currentConfig(Player player) {
+        return Utils.heldLampConfigOrDefault(player);
+    }
+
+    private RayLightBehavior createDelegate(LampDeviceConfig config) {
+        // The held flashlight is driven by its own realLightIntensity; the
+        // legacy per-device realLight flag only governs placed lamp blocks.
         return new RayLightBehavior(
                 DynamicLightBuilder.cone()
                         .range(DynamicLightDefaults.FLASHLIGHT_RANGE)
                         .angle(INNER, OUTER)
-                        .luminance(15.0)
+                        .luminance(config.realLightIntensity())
                         .occlusion(false)
                         .buildConfig(),
                         () -> player.getEyePosition(1.0f),
                         () -> LineLightMath.computeDirection(player.getYRot(), player.getXRot(), false),
-                        () -> Utils.isUsingFlashlight(player),
-                        lightColor
+                        () -> Utils.isUsingFlashlight(player)
+                                && currentConfig(player).realLightIntensity() > 0,
+                        cc.sighs.handheldmoon.registry.Config.flashlightColorArgb(config)
                 );
-    }
-
-    /**
-     * Light colour of the held lamp's own device config, so per-item colours
-     * tint the beam; players lit through a compat controller keep the global
-     * config colour.
-     */
-    private static int heldColorArgb(Player player) {
-        return cc.sighs.handheldmoon.registry.Config.lightColorArgb(Utils.heldLampConfig(player));
     }
 
     @Override
@@ -69,12 +68,13 @@ public class PlayerFlashlightLineLightBehavior implements DynamicLightBehavior {
 
     @Override
     public boolean hasChanged() {
-        // The colour lives in the held item's data component, which the ray
-        // light config does not observe; rebuild the delegate when it changes.
-        int current = heldColorArgb(player);
-        if (current != color) {
-            color = current;
-            delegate = createDelegate(color);
+        // Colour, luminance and activation all live in the held item's data
+        // component, which the ray light config does not observe; rebuild the
+        // delegate whenever the per-item flashlight config changes.
+        LampDeviceConfig current = currentConfig(player);
+        if (!current.equals(config)) {
+            config = current;
+            delegate = createDelegate(config);
             return true;
         }
         return delegate.hasChanged();
@@ -82,7 +82,11 @@ public class PlayerFlashlightLineLightBehavior implements DynamicLightBehavior {
 
     @Override
     public boolean isRemoved() {
-        return delegate.isRemoved();
+        // Check the live per-item config instead of the delegate's cached
+        // activity so raising the intensity back above zero re-registers the
+        // light even while the flashlight stayed switched on.
+        return !Utils.isUsingFlashlight(player)
+                || currentConfig(player).realLightIntensity() <= 0;
     }
 
     @Override

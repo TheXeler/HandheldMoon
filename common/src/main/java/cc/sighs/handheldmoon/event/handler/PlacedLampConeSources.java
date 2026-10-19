@@ -5,7 +5,6 @@ import cc.sighs.handheldmoon.api.raycone.RayConeRenderer;
 import cc.sighs.handheldmoon.api.light.EntityLightProfile;
 import cc.sighs.handheldmoon.api.light.EntityLightRuntimeState;
 import cc.sighs.handheldmoon.lights.FullMoonDynamicLightSource;
-import cc.sighs.handheldmoon.registry.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
@@ -26,7 +25,7 @@ public final class PlacedLampConeSources {
             Iterable<?> ignored,
             List<RayConeRenderer.ConeSource> sources
     ) {
-        if (!Config.VISIBLE_CONE.get() || minecraft.level == null) {
+        if (minecraft.level == null) {
             return;
         }
         for (Entity entity : minecraft.level.entitiesForRendering()) {
